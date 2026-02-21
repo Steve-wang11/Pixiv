@@ -589,20 +589,14 @@ function checkMessageThread(checkTimes) {
 
 // 获取请求的user id方便其他ajax请求构造
 function getPixivUid() {
+    // cache.delete("pixiv:uid")
     let uid = getFromCache("pixiv:uid")
-    if (!uid || String(uid) === "null") {
-        // uid = getWebviewJson("https://www.pixiv.net/", html => {
-        //     return html.match(/user_id:'(\d+)'/)[1]
-        // })
-
-        let html = java.webView(null, "https://www.pixiv.net/", null)
-        try {
-            uid = html.match(/user_id:'(\d+)'/)[1]
-        } catch (e) {
-            uid = null
-        }
-        putInCache("pixiv:uid", String(uid))
+    if (!uid && isLogin()) {
+        let html = java.ajax("https://www.pixiv.net/")
+        uid = html.match(/user_id:'(\d+)'/)[1]
+        putInCache("pixiv:uid", uid)
     }
+    return uid
 }
 
 function getHeaders() {
