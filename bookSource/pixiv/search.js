@@ -71,6 +71,11 @@ function getUserIdOnline(full) {
     let novels = Object.values(JSON.parse(resp.props.pageProps.serverSerializedPreloadedState).thumbnail.novel)
     let userIds = Array.from(new Set(novels.map(novel => novel.userId)))
     java.log(`👤 获取作者ID：${JSON.stringify(userIds)}`)
+    if (userIds.length === 1) {
+        let pixivAuthors = getFromCacheObject("pixivAuthors")
+        pixivAuthors[userName] = userIds[0]
+        putInCacheObject("pixivAuthors", pixivAuthors)
+    }
     if (userIds.length === 0) sleepToast(`\n暂无名为【${userName}】的作者发布过小说\n请尝试其他关键词`)
     return [userIds, novels]
 }
