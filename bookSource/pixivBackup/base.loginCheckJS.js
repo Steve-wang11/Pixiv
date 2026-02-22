@@ -135,7 +135,7 @@ function publicFunc() {
     u.getCsrfToken = function() {
         let pixivCsrfToken = getFromCache("pixivCsrfToken")
         if (!pixivCsrfToken) {
-            let html = java.webView(null, "https://www.pixiv.net/", null)
+            let html = java.ajax("https://www.pixiv.net/")
             try {
                 pixivCsrfToken = html.match(/token\\":\\"([a-z0-9]{32})/)[1]
                 putInCache("pixivCsrfToken", pixivCsrfToken)  // 与登录设备有关，无法存储 nul
@@ -153,7 +153,7 @@ function publicFunc() {
     u.combineNovels = function(novels) {
         return novels.filter(novel => {
             // 单本直接解析为一本书
-            if (novel.seriesId === undefined || novel.seriesId === null) {
+            if (!novel.seriesId) {
                 return true
             }
             // 集合中没有该系列解析为一本书
@@ -167,14 +167,11 @@ function publicFunc() {
 
     // 屏蔽作者
     u.authorFilter = function(novels) {
-        let authors = getFromCacheObject("blockAuthorList")
-        if (Array.isArray(authors) && authors.length >= 0) {
-            java.log(`🚫 屏蔽作者ID：${JSON.stringify(authors)}`)
-            authors.forEach(author => {
-                novels = novels.filter(novel => {
-                    novel.userId !== String(author)
-                })
-            })
+        let blockAuthorList = getFromCacheObject("blockAuthorList")
+        if (Array.isArray(blockAuthorList)) {
+            java.log(`🚫 屏蔽作者ID：${JSON.stringify(blockAuthorList)}`)
+            let blockAuthorSet = new Set(blockAuthorList.map(id => String(id)))
+            novels = novels.filter(novel => !blockAuthorSet.has(String(novel.userId)))
         }
         return novels
     }
@@ -223,6 +220,7 @@ function publicFunc() {
 
     // 过滤描述与标签（屏蔽标签/屏蔽描述）
     u.novelFilter2 = function(novels) {
+        const length = novels.length
         let novels0 = novels.map(novel => novel.id)
         let captionBlockWords = getFromCacheObject("captionBlockWords")
         if (!captionBlockWords) captionBlockWords = []
@@ -248,7 +246,7 @@ function publicFunc() {
             //         if (novel.tags !== undefined) return novel.tags.includes(item)
             //     })
             // })
-            novels = novels.filter(novel => !tagsBlockWords.some(item => novel.tags.includes(item)))
+            novels = novels.filter(novel => !tagsBlockWords.some(item => novel.tagsList.includes(item)))
             let novels2 = novels.map(novel => novel.id)
             java.log(`🚫 屏蔽标签：${tagsBlockWords.join("、")}`)
             java.log(`🚫 屏蔽标签：过滤前${novels0.length}；过滤后${novels2.length}`)
@@ -351,6 +349,24 @@ function publicFunc() {
                 // novel.isWatched = novel.isWatched  // 搜索系列可获取
             }
 
+            // 发现：排行榜
+            if (novel.rank) {
+                // novel.id = novel.id
+                // novel.title = novel.title
+                novel.userName = novel.user_name
+                novel.userId = novel.user_id
+                novel.tags = novel.tag_a
+                // novel.language = novel.language
+                novel.seriesId = novel.series_id
+                novel.seriesTitle = novel.series_title || ""
+                novel.textCount = novel.character_count
+                novel.description = novel.comment
+                novel.coverUrl = novel.url
+                let date = novel.create_date.split(" ")
+                novel.createDate = novel.updateDate = `${date[0]}T${date[1]}:00+09:00`
+                novel.isBookmark = novel.is_bookmarked
+            }
+
             // 单篇加更多信息
             if (!novel.seriesId) {
                 novel.tags.unshift("单本")
@@ -401,7 +417,6 @@ function publicFunc() {
                     firstNovel = {}
                     firstNovel.description = ""
                 }
-                novel.tags.unshift("长篇")
                 if (novel.description === "") {
                     novel.description = firstNovel.description
                 }
@@ -428,22 +443,23 @@ function publicFunc() {
             novel.createDate = dateFormat(novel.createDate)
             novel.updateDate = dateFormat(novel.updateDate)
 
-            novel.tags2 = []
+            novel.tagsList = []
             for (let i in novel.tags) {
                 let tag = novel.tags[i]
                 if (tag.includes("/")) {
                     let tags = tag.split("/")
-                    novel.tags2 = novel.tags2.concat(tags)
+                    novel.tagsList = novel.tagsList.concat(tags)
                 } else {
-                    novel.tags2.push(tag)
+                    novel.tagsList.push(tag)
                 }
             }
-            novel.tags = Array.from(new Set(novel.tags2))
+            novel.tags = Array.from(new Set(novel.tagsList))
             novel.tags = novel.tags.join(",")
+            let collectMsg
             if (novel.seriesId) {
-                collectMsg = `追更：${util.checkStatus(novel.isWatched)}追更系列`
+                collectMsg = `📃 追更：${util.checkStatus(novel.isWatched)}追更系列`
             } else {
-                collectMsg = `收藏：${util.checkStatus(novel.isBookmark)}加入收藏`
+                collectMsg = `❤️ 收藏：${util.checkStatus(novel.isBookmark)}加入收藏`
             }
 
             if (util.settings.MORE_INFORMATION) {
@@ -572,16 +588,14 @@ function checkMessageThread(checkTimes) {
 
 // 获取请求的user id方便其他ajax请求构造
 function getPixivUid() {
+    // cache.delete("pixiv:uid")
     let uid = getFromCache("pixiv:uid")
-    if (!uid || String(uid) === "null") {
-        let html = java.webView(null, "https://www.pixiv.net/", null)
-        try {
-            uid = html.match(/user_id:'(\d+)'/)[1]
-        } catch (e) {
-            uid = null
-        }
-        putInCache("pixiv:uid", String(uid))
+    if (!uid && isLogin()) {
+        let html = java.ajax("https://www.pixiv.net/")
+        uid = html.match(/user_id:'(\d+)'/)[1]
+        putInCache("pixiv:uid", uid)
     }
+    return uid
 }
 
 function getHeaders() {
@@ -591,7 +605,7 @@ function getHeaders() {
         "accept-language": "zh-CN",
         // "content-type": "application/json; charset=utf-8",
         // "content-type": "application/x-www-form-urlencoded; charset=utf-8",
-        "origin": "https//www.pixiv.net",
+        "origin": "https://www.pixiv.net",
         "Referer": "https://www.pixiv.net/",
         // "sec-ch-ua": `"Not/A)Brand";v="8", "Chromium";v="132", "Google Chrome";v="132"`,
         // "sec-ch-ua-mobile": "?0",
@@ -608,6 +622,11 @@ function getHeaders() {
 }
 
 publicFunc()
+if (!isLogin() && !util.settings.DEBUG) {
+    sleepToast("🔍 搜索小说\n\n⚠️ 当前未登录账号\n请登录 Pixiv 账号", 1.5)
+    util.removeCookie(); util.login()
+    sleepToast("🔍 搜索小说\n\n登录成功后，请重新搜索/进入发现", 2)
+}
 if (result.code() === 200) {
     getPixivUid(); getWebViewUA(); util.getCookie(); util.getCsrfToken(); getHeaders()
     if (!util.settings.FAST) checkMessageThread()   // 检测过度访问

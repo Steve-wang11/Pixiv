@@ -61,38 +61,35 @@ function getUserIdCache() {
 function getUserIdOnline(full) {
     let userName = String(java.get("keyword"))
     let page = Number(java.get("page"))
-    let userIds = getAjaxParseJson(urlSearchUser(userName, page, full), html => {
-            let resp = JSON.parse(html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/)[1])
-            return resp.props.pageProps.userIds
+    // cache.delete(urlSearchUser(userName, page, full))
+    let resp = getAjaxParseJson(urlSearchUser(userName, page, full), html => {
+            // java.log(urlIP(urlSearchUser(userName, page, full)))
+            return JSON.parse(html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/)[1])
         }
     )
 
-    let tempUids = []
-    for (let i in userIds) {
-        let userId = userIds[i]
-        let resp = getAjaxJson(urlIP(urlUserAllWorks(userId)), true)
-        // java.log(urlIP(urlUserAllWorks(userId)))
-        if (resp.error === false) {
-            // 仅获取有小说的作者
-            let novelIds = Object.keys(resp.body.novels)
-            // java.log(`${userId}-${novelIds.length}`)
-            if (novelIds.length >= 1) tempUids.push(userId)
-        }
+    let novels = Object.values(JSON.parse(resp.props.pageProps.serverSerializedPreloadedState).thumbnail.novel)
+    let userIds = Array.from(new Set(novels.map(novel => novel.userId)))
+    java.log(`👤 获取作者ID：${JSON.stringify(userIds)}`)
+    if (userIds.length === 1) {
+        let pixivAuthors = getFromCacheObject("pixivAuthors")
+        pixivAuthors[userName] = userIds[0]
+        putInCacheObject("pixivAuthors", pixivAuthors)
     }
-    java.log(`👤 获取作者ID：${JSON.stringify(tempUids)}`)
-    return tempUids
+    if (userIds.length === 0) sleepToast(`\n暂无名为【${userName}】的作者发布过小说\n请尝试其他关键词`)
+    return [userIds, novels]
 }
 
 function getUserNovels() {
+    let novels = []
     let page = Number(java.get("page"))
     let uidList = getUserIdCache()
-    if (!uidList) uidList = getUserIdOnline()
-    // if (!uidList) uidList = getUserIdOnline(true)
+    if (!uidList) [uidList, novels] = getUserIdOnline()
 
-    let novels = []
-    for (let i in uidList) {
-        let uid = uidList[i]
-        let resp = getAjaxJson(urlIP(urlUserAllWorks(uid)))
+    if(uidList.length === 0 || uidList.length >=2 ) return novels
+    else if(uidList.length === 1 ) {
+        let uid = uidList[0]
+        let resp = getAjaxJson(urlIP(urlUserAllWorks(uid)), true)
         // java.log(urlIP(urlUserAllWorks(id)))
 
         // 获取系列小说，与 util.handnovels 系列详情兼容
@@ -131,7 +128,7 @@ function getUserNovels() {
         // java.log(`真单篇的小说ID：${JSON.stringify(novelIds)}`)
         // java.log(JSON.stringify(novelIds.length))
 
-        if (util.environment.IS_LEGADO) {
+        if (globalThis.environment.IS_LEGADO) {
             let novelUrls = novelIds.map(novelId => urlIP(urlNovelDetailed(novelId)))
             // java.log(JSON.stringify(novelUrls))
             // cache.delete(novelUrls)
@@ -268,16 +265,16 @@ function novelFilter(novels) {
         java.put("keyword", keyword.slice(1))
         novels = novels.concat(getSeries())
         novels = novels.concat(getNovels())
-    } else {
-        if (!isLogin()) {
-            sleepToast("🔍 搜索小说\n\n⚠️ 当前未登录账号\n请登录 Pixiv 账号", 1.5)
-            util.removeCookie(); util.login()
-            sleepToast("🔍 搜索小说\n\n登录成功后，请重新搜索", 2)
-            return []
+    } else if (keyword.startsWith("$") || util.settings.SEARCH_AUTHOR) {
+        if (keyword.startsWith("$")) {
+            keyword = keyword.slice(1)
+            java.put("keyword", keyword)
         }
+        java.log(`👤 粗略搜索作者：${keyword}`)
+        novels = novels.concat(getUserIdOnline()[1])
+    } else {
         novels = novels.concat(getSeries())
         novels = novels.concat(getNovels())
-        if (util.settings.SEARCH_AUTHOR) novels = novels.concat(getUserNovels())
         if (util.settings.CONVERT_CHINESE) novels = novels.concat(getConvertNovels())
     }
     // java.log(JSON.stringify(novels))
