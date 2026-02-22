@@ -381,7 +381,8 @@ function publicFunc() {
                 novel.textCount = novel.character_count
                 novel.description = novel.comment
                 novel.coverUrl = novel.url
-                novel.createDate = novel.create_date
+                let date = novel.create_date.split(" ")
+                novel.createDate = novel.updateDate = `${date[0]}T${date[1]}:00+09:00`
                 novel.isBookmark = novel.is_bookmarked
             }
 
