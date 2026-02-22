@@ -141,7 +141,7 @@ function publicFunc() {
     u.getCsrfToken = function() {
         let pixivCsrfToken = getFromCache("pixivCsrfToken")
         if (!pixivCsrfToken) {
-            let html = java.webView(null, "https://www.pixiv.net/", null)
+            let html = java.ajax("https://www.pixiv.net/")
             try {
                 pixivCsrfToken = html.match(/token\\":\\"([a-z0-9]{32})/)[1]
                 putInCache("pixivCsrfToken", pixivCsrfToken)  // 与登录设备有关，无法存储 nul
@@ -260,16 +260,14 @@ function publicFunc() {
 
 // 获取请求的user id方便其他ajax请求构造
 function getPixivUid() {
+    // cache.delete("pixiv:uid")
     let uid = getFromCache("pixiv:uid")
-    if (!uid || String(uid) === "null") {
-        let html = java.webView(null, "https://www.pixiv.net/", null)
-        try {
-            uid = html.match(/user_id:'(\d+)'/)[1]
-        } catch (e) {
-            uid = null
-        }
-        putInCache("pixiv:uid", String(uid))
+    if (!uid && isLogin()) {
+        let html = java.ajax("https://www.pixiv.net/")
+        uid = html.match(/user_id:'(\d+)'/)[1]
+        putInCache("pixiv:uid", uid)
     }
+    return uid
 }
 
 publicFunc()

@@ -46,7 +46,7 @@ function getCookie() {
 function getCsrfToken() {
     let pixivCsrfToken = getFromCache("pixivCsrfToken")
     if (!pixivCsrfToken) {
-        let html = java.webView(null, "https://www.pixiv.net/", null)
+        let html = java.ajax("https://www.pixiv.net/")
         try {
             pixivCsrfToken = html.match(/token\\":\\"([a-z0-9]{32})/)[1]
             putInCache("pixivCsrfToken", pixivCsrfToken)  // 与登录设备有关，无法存储 nul
