@@ -44,21 +44,22 @@ function handlerFactory() {
     if (baseUrl.includes("/genre")) {
         return handlerWatchList()
     }
-    // 正则匹配网址内容
+    // 匹配 html 中的 json
     if (baseUrl.includes("/ranking")) {
         return handlerRanking()
     }
+    // 正则匹配网址内容
     if (baseUrl.includes("/marker_all")) {
-        return handlerRanking()
+        return handlerRankingOld()
     }
     if (baseUrl.includes("/editors_picks")) {
-        return handlerRanking()
+        return handlerRankingOld()
     }
     if (baseUrl.includes("/ajax/search/novels")) {
         return handlerSearch()
     }
     if (baseUrl.startsWith("https://www.pixiv.net")) {
-        return handlerRanking()
+        return handlerRankingOld()
     }
     else {
         return () => {startBrowser(baseUrl, ""); return []}
@@ -124,15 +125,25 @@ function handlerWatchList() {
     }
 }
 
-// 排行榜，书签，首页，编辑部推荐，顺序相同
+// 排行榜，顺序相同
 function handlerRanking() {
+    return () => {
+        let resp = JSON.parse(result.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/)[1])
+        let novels = resp.props.pageProps.assign.display_a.rank_a
+        // java.log(JSON.stringify(novels))
+        return util.formatNovels(util.handNovels(util.combineNovels(novels)))
+    }
+}
+
+// 书签，首页，编辑部推荐，顺序相同
+function handlerRankingOld() {
     if (globalThis.environment.IS_LEGADO) return handlerRankingAjaxAll()
     // else if (globalThis.environment.IS_SOURCE_READ) return handlerRankingWebview()
     else if (globalThis.environment.IS_SOURCE_READ) return handlerRankingAjax()
     else return []
 }
 
-// 排行榜，书签，首页，编辑部推荐，顺序相同
+// 书签，首页，编辑部推荐，顺序相同
 function handlerRankingAjaxAll() {
     return () => {
         let  novelIds = [], novelUrls = []
@@ -151,7 +162,7 @@ function handlerRankingAjaxAll() {
     }
 }
 
-// 排行榜，书签，首页
+// 书签，首页
 function handlerRankingWebview() {
     return () => {
         let novelIds = []  // 正则获取网址中的 novelId

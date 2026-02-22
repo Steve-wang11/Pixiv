@@ -172,7 +172,7 @@ function publicFunc() {
     u.combineNovels = function(novels) {
         return novels.filter(novel => {
             // 单本直接解析为一本书
-            if (novel.seriesId === undefined || novel.seriesId === null) {
+            if (!novel.seriesId) {
                 return true
             }
             // 集合中没有该系列解析为一本书
@@ -366,6 +366,23 @@ function publicFunc() {
                 novel.seriesTitle = novel.title
                 novel.coverUrl = novel.cover.urls["480mw"]
                 // novel.isWatched = novel.isWatched  // 搜索系列可获取
+            }
+
+            // 发现：排行榜
+            if (novel.rank) {
+                // novel.id = novel.id
+                // novel.title = novel.title
+                novel.userName = novel.user_name
+                novel.userId = novel.user_id
+                novel.tags = novel.tag_a
+                // novel.language = novel.language
+                novel.seriesId = novel.series_id
+                novel.seriesTitle = novel.series_title || ""
+                novel.textCount = novel.character_count
+                novel.description = novel.comment
+                novel.coverUrl = novel.url
+                novel.createDate = novel.create_date
+                novel.isBookmark = novel.is_bookmarked
             }
 
             // 单篇加更多信息
