@@ -38,23 +38,23 @@ let generalNew = [
 
 let r18Rank = [
     {"👑 排行榜单 👑": ""},
-    {"今日": "https://www.pixiv.net/novel/ranking.php?mode=daily_r18"},
-    {"本周": "https://www.pixiv.net/novel/ranking.php?mode=weekly_r18"},
-    {"R18G": "https://www.pixiv.net/novel/ranking.php?mode=r18g"},
-    {"男性": "https://www.pixiv.net/novel/ranking.php?mode=male_r18"},
-    {"女性": "https://www.pixiv.net/novel/ranking.php?mode=female_r18"}
+    {"今日": "https://www.pixiv.net/novel/ranking.php?mode=daily_r18&p={{page}}"},
+    {"本周": "https://www.pixiv.net/novel/ranking.php?mode=weekly_r18&p={{page}}"},
+    {"R18G": "https://www.pixiv.net/novel/ranking.php?mode=r18g&p={{page}}"},
+    {"男性": "https://www.pixiv.net/novel/ranking.php?mode=male_r18&p={{page}}"},
+    {"女性": "https://www.pixiv.net/novel/ranking.php?mode=female_r18&p={{page}}"}
 ]
 
 let generalRank = [
     {"🏆 排行榜单 🏆": ""},
-    {"今日": "https://www.pixiv.net/novel/ranking.php?mode=daily"},
-    {"本周": "https://www.pixiv.net/novel/ranking.php?mode=weekly"},
-    {"本月": "https://www.pixiv.net/novel/ranking.php?mode=monthly"},
-    {"男性": "https://www.pixiv.net/novel/ranking.php?mode=male"},
-    {"女性": "https://www.pixiv.net/novel/ranking.php?mode=female"},
-    {"新人": "https://www.pixiv.net/novel/ranking.php?mode=rookie"},
-    {"原创": "https://www.pixiv.net/novel/ranking.php?mode=weekly_original"},
-    {"AI生成": "https://www.pixiv.net/novel/ranking.php?mode=weekly_ai"}
+    {"今日": "https://www.pixiv.net/novel/ranking.php?mode=daily&p={{page}}"},
+    {"本周": "https://www.pixiv.net/novel/ranking.php?mode=weekly&p={{page}}"},
+    {"本月": "https://www.pixiv.net/novel/ranking.php?mode=monthly&p={{page}}"},
+    {"男性": "https://www.pixiv.net/novel/ranking.php?mode=male&p={{page}}"},
+    {"女性": "https://www.pixiv.net/novel/ranking.php?mode=female&p={{page}}"},
+    {"新人": "https://www.pixiv.net/novel/ranking.php?mode=rookie&p={{page}}"},
+    {"原创": "https://www.pixiv.net/novel/ranking.php?mode=weekly_original&p={{page}}"},
+    {"AI生成": "https://www.pixiv.net/novel/ranking.php?mode=weekly_ai&p={{page}}"}
 ]
 
 let r18Genre = [
