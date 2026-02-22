@@ -623,18 +623,23 @@ function getHeaders() {
 }
 
 publicFunc()
+if (!isLogin() && !util.settings.DEBUG) {
+    sleepToast("🔍 搜索小说\n\n⚠️ 当前未登录账号\n请登录 Pixiv 账号", 1.5)
+    util.removeCookie(); util.login()
+    sleepToast("🔍 搜索小说\n\n登录成功后，请重新搜索/进入发现", 2)
+}
 if (result.code() === 200) {
     getPixivUid(); getWebViewUA(); util.getCookie(); util.getCsrfToken(); getHeaders()
     if (!util.settings.FAST) checkMessageThread()   // 检测过度访问
 }
 
-util.debugFunc(() => {
-    java.log(`DEBUG = ${util.settings.DEBUG}\n`)
-    java.log(JSON.stringify(util.settings, null, 4))
-    java.log(`${getWebViewUA()}\n`)
-    java.log(`${getFromCache("pixivCsrfToken")}\n`)
-    java.log(`${getFromCache("pixivCookie")}\n`)
-    java.log(`${getFromCache("headers")}\n`)
-})
+// util.debugFunc(() => {
+//     java.log(`DEBUG = ${util.settings.DEBUG}\n`)
+//     java.log(JSON.stringify(util.settings, null, 4))
+//     java.log(`${getWebViewUA()}\n`)
+//     java.log(`${getFromCache("pixivCsrfToken")}\n`)
+//     java.log(`${getFromCache("pixivCookie")}\n`)
+//     java.log(`${getFromCache("headers")}\n`)
+// })
 
 java.getStrResponse(null, null)

@@ -17,9 +17,6 @@ function handlerFactory() {
     if (baseUrl.includes("github")) {
         return () => {startBrowser(baseUrl, ""); return []}
     }
-    if (!isLogin()) {
-        return handlerNoLogin()
-    }
     if (baseUrl.includes("/bookmark")) {
         return handlerBookMarks()
     }
@@ -68,14 +65,6 @@ function handlerFactory() {
     }
 }
 
-function handlerNoLogin() {
-    return () => {
-        sleepToast("⚠️ 当前未登录账号\n\n请登录 Pixiv 账号", 1.5)
-        util.removeCookie(); util.login()
-        sleepToast("登录成功后，请重新进入发现", 2)
-        return []
-    }
-}
 
 // 推荐小说
 function handlerRecommend() {

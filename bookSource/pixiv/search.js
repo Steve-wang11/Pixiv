@@ -269,12 +269,6 @@ function novelFilter(novels) {
         java.put("keyword", keyword.slice(1))
         novels = novels.concat(getUserIdOnline()[1])
     } else {
-        if (!isLogin()) {
-            sleepToast("🔍 搜索小说\n\n⚠️ 当前未登录账号\n请登录 Pixiv 账号", 1.5)
-            util.removeCookie(); util.login()
-            sleepToast("🔍 搜索小说\n\n登录成功后，请重新搜索", 2)
-            return []
-        }
         novels = novels.concat(getSeries())
         novels = novels.concat(getNovels())
         if (util.settings.SEARCH_AUTHOR) novels = novels.concat(getUserNovels())
