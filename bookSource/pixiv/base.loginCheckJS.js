@@ -418,7 +418,6 @@ function publicFunc() {
                     firstNovel = {}
                     firstNovel.description = ""
                 }
-                novel.tags.unshift("长篇")
                 if (novel.description === "") {
                     novel.description = firstNovel.description
                 }
@@ -457,6 +456,7 @@ function publicFunc() {
             }
             novel.tags = Array.from(new Set(novel.tagsList))
             novel.tags = novel.tags.join(",")
+            let collectMsg
             if (novel.seriesId) {
                 collectMsg = `📃 追更：${util.checkStatus(novel.isWatched)}追更系列`
             } else {
