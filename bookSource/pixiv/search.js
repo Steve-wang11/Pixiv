@@ -269,10 +269,14 @@ function novelFilter(novels) {
         java.put("keyword", keyword.slice(1))
         novels = novels.concat(getUserIdOnline()[1])
     } else {
-        novels = novels.concat(getSeries())
-        novels = novels.concat(getNovels())
-        if (util.settings.SEARCH_AUTHOR) novels = novels.concat(getUserNovels())
-        if (util.settings.CONVERT_CHINESE) novels = novels.concat(getConvertNovels())
+        if (util.settings.SEARCH_AUTHOR) {
+            java.log(`👤 粗略搜索作者：${keyword}`)
+            novels = novels.concat(getUserIdOnline()[1])
+        } else {
+            novels = novels.concat(getSeries())
+            novels = novels.concat(getNovels())
+            if (util.settings.CONVERT_CHINESE) novels = novels.concat(getConvertNovels())
+        }
     }
     // java.log(JSON.stringify(novels))
     // 返回空列表中止流程
