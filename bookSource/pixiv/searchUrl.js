@@ -25,6 +25,10 @@ if (keyword.startsWith("@") || keyword.startsWith("＠")) {
         java.log(`👤 搜索作者：${keyword}`)
     }
 
+} else if (keyword.startsWith("$") || keyword.startsWith("＄")) {
+    keyword = keyword.slice(1)
+    java.put("keyword", `$${keyword}`)
+    java.log(`👤 粗略搜索作者：${keyword}`)
 } else if (keyword.startsWith("#") || keyword.startsWith("＃")) {
     keyword = keyword.slice(1)
     java.log(`#️⃣ 搜索标签：${keyword}`)
