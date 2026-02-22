@@ -81,15 +81,15 @@ function getUserIdOnline(full) {
 }
 
 function getUserNovels() {
+    let novels = []
     let page = Number(java.get("page"))
     let uidList = getUserIdCache()
-    if (!uidList) uidList = getUserIdOnline()
-    // if (!uidList) uidList = getUserIdOnline(true)
+    if (!uidList) [uidList, novels] = getUserIdOnline()
 
-    let novels = []
-    for (let i in uidList) {
-        let uid = uidList[i]
-        let resp = getAjaxJson(urlIP(urlUserAllWorks(uid)))
+    if(uidList.length === 0 || uidList.length >=2 ) return novels
+    else if(uidList.length === 1 ) {
+        let uid = uidList[0]
+        let resp = getAjaxJson(urlIP(urlUserAllWorks(uid)), true)
         // java.log(urlIP(urlUserAllWorks(id)))
 
         // 获取系列小说，与 util.handnovels 系列详情兼容
