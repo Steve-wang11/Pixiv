@@ -61,26 +61,18 @@ function getUserIdCache() {
 function getUserIdOnline(full) {
     let userName = String(java.get("keyword"))
     let page = Number(java.get("page"))
-    let userIds = getAjaxParseJson(urlSearchUser(userName, page, full), html => {
-            let resp = JSON.parse(html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/)[1])
-            return resp.props.pageProps.userIds
+    // cache.delete(urlSearchUser(userName, page, full))
+    let resp = getAjaxParseJson(urlSearchUser(userName, page, full), html => {
+            // java.log(urlIP(urlSearchUser(userName, page, full)))
+            return JSON.parse(html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/)[1])
         }
     )
 
-    let tempUids = []
-    for (let i in userIds) {
-        let userId = userIds[i]
-        let resp = getAjaxJson(urlIP(urlUserAllWorks(userId)), true)
-        // java.log(urlIP(urlUserAllWorks(userId)))
-        if (resp.error === false) {
-            // 仅获取有小说的作者
-            let novelIds = Object.keys(resp.body.novels)
-            // java.log(`${userId}-${novelIds.length}`)
-            if (novelIds.length >= 1) tempUids.push(userId)
-        }
-    }
-    java.log(`👤 获取作者ID：${JSON.stringify(tempUids)}`)
-    return tempUids
+    let novels = Object.values(JSON.parse(resp.props.pageProps.serverSerializedPreloadedState).thumbnail.novel)
+    let userIds = Array.from(new Set(novels.map(novel => novel.userId)))
+    java.log(`👤 获取作者ID：${JSON.stringify(userIds)}`)
+    if (userIds.length === 0) sleepToast(`\n暂无名为【${userName}】的作者发布过小说\n请尝试其他关键词`)
+    return [userIds, novels]
 }
 
 function getUserNovels() {
